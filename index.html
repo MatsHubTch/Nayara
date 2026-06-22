@@ -72,6 +72,9 @@ footer {
   </div>
 
 <script>
+  // COLE AQUI A URL QUE VOCÊ COPIOU NO PASSO 3
+  const URL_PLANILHA = "SUA_URL_DO_WEB_APP_AQUI";
+
   function pegarFuncionarios() {
     return JSON.parse(localStorage.getItem("funcionarios")) || [];
   }
@@ -88,15 +91,28 @@ footer {
     let cpf = document.getElementById("cpf").value;
 
     let funcionarios = pegarFuncionarios();
-
     funcionarios.push({ nome, email, cpf });
-
     salvarFuncionarios(funcionarios);
 
-    alert("Funcionário cadastrado!");
+    // --- ENVIANDO DADOS PARA A PLANILHA GOOGLE ---
+    fetch(URL_PLANILHA, {
+      method: "POST",
+      mode: "no-cors", // Evita problemas de CORS no GitHub Pages
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ nome, email, cpf })
+    })
+    .then(() => {
+      alert("Funcionário cadastrado e salvo na planilha!");
+    })
+    .catch(error => {
+      console.error("Erro ao enviar para planilha:", error);
+      alert("Funcionário salvo localmente, mas houve um erro com a planilha.");
+    });
+    // ---------------------------------------------
 
     event.target.reset();
-
     mostrar(funcionarios);
   }
 
