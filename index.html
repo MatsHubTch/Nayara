@@ -163,20 +163,19 @@
   }
 
   function buscar() {
-    let texto = document.getElementById("busca").value.toLowerCase();
-    let funcionarios = JSON.parse(localStorage.getItem("funcionarios")) || [];
+  let texto = document.getElementById("busca").value.toLowerCase();
+  let funcionarios = JSON.parse(localStorage.getItem("funcionarios")) || [];
 
-    let filtrados = funcionarios.filter(f => {
-      // Normaliza os campos antes de filtrar para evitar misturar colunas
-      let n = (Array.isArray(f.nome) ? f.nome[0] : f.nome || "").toString().toLowerCase();
-      let e = (Array.isArray(f.email) ? f.email[1] : f.email || "").toString().toLowerCase();
-      let c = (Array.isArray(f.cpf) ? f.cpf[2] : f.cpf || "").toString().toLowerCase();
+  let filtrados = funcionarios.filter(f => {
+    // Normaliza o nome tirando estruturas de array se houver
+    let n = (Array.isArray(f.nome) ? f.nome : f.nome || "").toString().toLowerCase();
 
-      return n.includes(texto) || e.includes(texto) || c.includes(texto);
-    });
+    // Filtra estritamente pelo campo Nome
+    return n.includes(texto);
+  });
 
-    mostrar(filtrados);
-  }
+  mostrar(filtrados);
+}
 
   carregarDadosDaPlanilha();
 </script>
