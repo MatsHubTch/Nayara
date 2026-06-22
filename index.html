@@ -72,10 +72,9 @@
   </div>
 
 <script>
-  // Link gerado pela implantação do seu Google Apps Script
+  // Cole aqui a nova URL gerada após criar a "Nova versão" no Apps Script
   const URL_PLANILHA = "https://script.google.com/macros/s/AKfycbx3Hd1OCANZSSvsjcfy2Hqfh0YW-grrrqY1zg9pxz8YpYvDj5_xS_LwhqtODLehUlwI9w/exec";
 
-  // Função para buscar os dados em tempo real direto da Planilha Google
   function carregarDadosDaPlanilha() {
     let div = document.getElementById("lista");
 
@@ -83,12 +82,10 @@
       .then(response => response.json())
       .then(dados => {
         mostrar(dados);
-        // Atualiza o cache local para a busca rápida funcionar offline
         localStorage.setItem("funcionarios", JSON.stringify(dados));
       })
       .catch(error => {
         console.error("Erro ao buscar dados online:", error);
-        // Caso a internet falhe, tenta carregar o histórico salvo no navegador
         let locais = JSON.parse(localStorage.getItem("funcionarios")) || [];
         mostrar(locais);
       });
@@ -101,24 +98,27 @@
     let email = document.getElementById("email").value;
     let cpf = document.getElementById("cpf").value;
 
-    // Envia os dados estruturados em tempo real para a Planilha Google
+    // Criando o formato de dados correto para evitar problemas de bloqueio (CORS)
+    let dadosFormulario = new URLSearchParams();
+    dadosFormulario.append("nome", nome);
+    dadosFormulario.append("email", email);
+    dadosFormulario.append("cpf", cpf);
+
     fetch(URL_PLANILHA, {
       method: "POST",
-      mode: "no-cors", // Evita bloqueios de segurança (CORS) no GitHub Pages
+      body: dadosFormulario,
       headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ nome, email, cpf })
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
     })
     .then(() => {
-      alert("Funcionário cadastrado com sucesso na planilha!");
+      alert("Funcionário cadastrado com sucesso!");
       event.target.reset();
-      // Aguarda 1.5 segundo para dar tempo do Google processar e atualiza a tela
       setTimeout(carregarDadosDaPlanilha, 1500); 
     })
     .catch(error => {
       console.error("Erro ao enviar dados:", error);
-      alert("Erro ao conectar com a planilha. Verifique sua conexão.");
+      alert("Erro ao conectar com a nuvem, verifique a publicação do script.");
     });
   }
 
@@ -155,7 +155,6 @@
     mostrar(filtrados);
   }
 
-  // Executa a busca na planilha assim que a página é carregada
   carregarDadosDaPlanilha();
 </script>
 
