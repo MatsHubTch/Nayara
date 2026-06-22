@@ -72,15 +72,27 @@ footer {
   </div>
 
 <script>
-  // COLE AQUI A URL QUE VOCÊ COPIOU NO PASSO 3
+  // COLE AQUI A URL DO SEU WEB APP ATUALIZADO (PASSO 4 ACIMA)
   const URL_PLANILHA = "SUA_URL_DO_WEB_APP_AQUI";
 
-  function pegarFuncionarios() {
-    return JSON.parse(localStorage.getItem("funcionarios")) || [];
-  }
+  // Função para buscar dados em tempo real direto da Planilha Google
+  function carregarDadosDaPlanilha() {
+    let div = document.getElementById("lista");
+    div.innerHTML = "<p>Carregando funcionários registrados...</p>";
 
-  function salvarFuncionarios(lista) {
-    localStorage.setItem("funcionarios", JSON.stringify(lista));
+    fetch(URL_PLANILHA)
+      .then(response => response.json())
+      .then(dados => {
+        mostrar(dados);
+        // Salva uma cópia local por segurança (opcional)
+        localStorage.setItem("funcionarios", JSON.stringify(dados));
+      })
+      .catch(error => {
+        console.error("Erro ao buscar dados online:", error);
+        // Se a internet falhar, tenta carregar o histórico local do PC
+        let locais = JSON.parse(localStorage.getItem("funcionarios")) || [];
+        mostrar(locais);
+      });
   }
 
   function cadastrar(event) {
@@ -90,35 +102,35 @@ footer {
     let email = document.getElementById("email").value;
     let cpf = document.getElementById("cpf").value;
 
-    let funcionarios = pegarFuncionarios();
-    funcionarios.push({ nome, email, cpf });
-    salvarFuncionarios(funcionarios);
-
-    // --- ENVIANDO DADOS PARA A PLANILHA GOOGLE ---
+    // Envia em tempo real para a nuvem (Planilha)
     fetch(URL_PLANILHA, {
       method: "POST",
-      mode: "no-cors", // Evita problemas de CORS no GitHub Pages
+      mode: "no-cors",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({ nome, email, cpf })
     })
     .then(() => {
-      alert("Funcionário cadastrado e salvo na planilha!");
+      alert("Funcionário cadastrado com sucesso na nuvem!");
+      event.target.reset();
+      // Atualiza a lista buscando os novos dados inseridos
+      setTimeout(carregarDadosDaPlanilha, 1500); 
     })
     .catch(error => {
-      console.error("Erro ao enviar para planilha:", error);
-      alert("Funcionário salvo localmente, mas houve um erro com a planilha.");
+      console.error("Erro ao enviar dados:", error);
+      alert("Erro ao conectar com a planilha.");
     });
-    // ---------------------------------------------
-
-    event.target.reset();
-    mostrar(funcionarios);
   }
 
   function mostrar(lista) {
     let div = document.getElementById("lista");
     div.innerHTML = "";
+
+    if (lista.length === 0) {
+      div.innerHTML = "<p style='color: #888;'>Nenhum funcionário registrado.</p>";
+      return;
+    }
 
     lista.forEach(f => {
       div.innerHTML += `
@@ -133,7 +145,8 @@ footer {
 
   function buscar() {
     let texto = document.getElementById("busca").value.toLowerCase();
-    let funcionarios = pegarFuncionarios();
+    // Para a busca dinâmica funcionar instantaneamente, lemos o cache local rápido
+    let funcionarios = JSON.parse(localStorage.getItem("funcionarios")) || [];
 
     let filtrados = funcionarios.filter(f =>
       f.nome.toLowerCase().includes(texto) ||
@@ -144,7 +157,8 @@ footer {
     mostrar(filtrados);
   }
 
-  mostrar(pegarFuncionarios());
+  // Quando o site abre, ele puxa os registros atualizados da planilha
+  carregarDadosDaPlanilha();
 </script>
 
 <footer>
