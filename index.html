@@ -69,13 +69,11 @@
 
   <h1>Cadastro de Funcionários</h1>
 
-  <!-- Barra de pesquisa centralizada -->
   <div class="topo">
     <input type="text" id="busca" placeholder="🔍 Pesquisar funcionário..." oninput="buscar()">
   </div>
 
   <div class="container">
-    <!-- Formulário com validação real -->
     <form onsubmit="cadastrar(event)">
       <input type="text" id="nome" placeholder="Nome completo" required>
       <input type="email" id="email" placeholder="E-mail válido" required>
@@ -83,7 +81,6 @@
       <button type="submit">Cadastrar Funcionário</button>
     </form>
 
-    <!-- Lista colapsável -->
     <details open>
       <summary><strong>Funcionários cadastrados</strong></summary>
       <div id="lista">Carregando funcionários...</div>
@@ -107,12 +104,26 @@
       });
   }
 
-  function cadastrar(event) {
+    function cadastrar(event) {
     event.preventDefault();
 
-    let nome = document.getElementById("nome").value;
-    let email = document.getElementById("email").value;
-    let cpf = document.getElementById("cpf").value;
+    let nome = document.getElementById("nome").value.trim();
+    let email = document.getElementById("email").value.trim().toLowerCase();
+    let cpf = document.getElementById("cpf").value.trim();
+
+    let funcionariosExistentes = JSON.parse(localStorage.getItem("funcionarios")) || [];
+
+    let duplicado = funcionariosExistentes.some(f => {
+      let emailExistente = (Array.isArray(f.email) ? f.email[1] : f.email || "").toString().toLowerCase().trim();
+      let cpfExistente = (Array.isArray(f.cpf) ? f.cpf[2] : f.cpf || "").toString().trim();
+      
+      return emailExistente === email || cpfExistente === cpf;
+    });
+
+    if (duplicado) {
+      alert("Erro: Já existe um funcionário cadastrado com este E-mail ou CPF!");
+      return; 
+    }
 
     let dadosFormulario = new URLSearchParams();
     dadosFormulario.append("nome", nome);
@@ -137,6 +148,7 @@
     });
   }
 
+
   function mostrar(lista) {
     let div = document.getElementById("lista");
     div.innerHTML = "";
@@ -147,7 +159,6 @@
     }
 
     lista.forEach(f => {
-      // Garante o tratamento caso o dado venha como estrutura de array bruto do Apps Script antigo
       let nomeFinal = Array.isArray(f.nome) ? f.nome[0] : f.nome;
       let emailFinal = Array.isArray(f.email) ? f.email[1] : f.email;
       let cpfFinal = Array.isArray(f.cpf) ? f.cpf[2] : f.cpf;
@@ -167,10 +178,8 @@
   let funcionarios = JSON.parse(localStorage.getItem("funcionarios")) || [];
 
   let filtrados = funcionarios.filter(f => {
-    // Normaliza o nome tirando estruturas de array se houver
     let n = (Array.isArray(f.nome) ? f.nome : f.nome || "").toString().toLowerCase();
 
-    // Filtra estritamente pelo campo Nome
     return n.includes(texto);
   });
 
